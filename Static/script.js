@@ -1430,6 +1430,525 @@ function escapeHTML(value) {
 
 
 /* =========================================================
+   GUEST FEEDBACK
+   Guests are not department members. This flow only saves
+   a complaint/feedback. It never touches currentUser or
+   "campusVoiceCurrentUser", so it can't open the platform.
+========================================================= */
+
+const guestPage =
+    document.getElementById("guestPage");
+
+const GUEST_STORAGE_KEY =
+    "campusVoiceGuestFeedback";
+
+const GUEST_LAST_SUBMIT_KEY =
+    "campusVoiceGuestLastSubmit";
+
+const GUEST_MESSAGE_MAX = 2000;
+
+const GUEST_COOLDOWN_MS = 30 * 1000;
+
+
+const GUEST_CONTACT_TYPES = {
+
+    email: {
+        inputType: "email",
+        inputMode: "email",
+        maxLength: 254,
+        placeholder: "e.g. juan@example.com"
+    },
+
+    mobile: {
+        inputType: "tel",
+        inputMode: "tel",
+        maxLength: 16,
+        placeholder: "e.g. 09171234567 or +639171234567"
+    },
+
+    facebook: {
+        inputType: "text",
+        inputMode: "text",
+        maxLength: 200,
+        placeholder: "Facebook profile link or name"
+    }
+
+};
+
+
+function showGuest() {
+
+    landingPage.style.display = "none";
+
+    authPage.style.display = "none";
+
+    mainPage.style.display = "none";
+
+    guestPage.style.display = "flex";
+
+
+    resetGuestForm();
+
+
+    window.scrollTo(0, 0);
+}
+
+
+function guestBackToLogin() {
+
+    guestPage.style.display = "none";
+
+
+    resetGuestForm();
+
+
+    showLogin();
+}
+
+
+function resetGuestForm() {
+
+    document
+        .getElementById("guestForm")
+        .reset();
+
+
+    document
+        .getElementById("guestForm")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("guestThanks")
+        .classList.add("hidden");
+
+
+    clearGuestErrors();
+
+    updateGuestContactInput();
+
+    updateGuestCounter();
+}
+
+
+function getGuestContactType() {
+
+    const checked =
+        document.querySelector(
+            'input[name="guestContactType"]:checked'
+        );
+
+
+    return checked
+        ? checked.value
+        : "";
+}
+
+
+function updateGuestContactInput() {
+
+    const type =
+        getGuestContactType();
+
+
+    const config =
+        GUEST_CONTACT_TYPES[type];
+
+
+    if (!config) {
+
+        return;
+    }
+
+
+    const input =
+        document.getElementById("guestContact");
+
+
+    input.type = config.inputType;
+
+    input.inputMode = config.inputMode;
+
+    input.maxLength = config.maxLength;
+
+    input.placeholder = config.placeholder;
+
+    input.value = "";
+
+
+    setGuestError(
+        "guestContact",
+        ""
+    );
+}
+
+
+function updateGuestCounter() {
+
+    const length =
+        document
+            .getElementById("guestMessage")
+            .value
+            .length;
+
+
+    document.getElementById(
+        "guestCounter"
+    ).textContent =
+        length + " / " + GUEST_MESSAGE_MAX;
+}
+
+
+function setGuestError(
+    fieldId,
+    message
+) {
+
+    const error =
+        document.getElementById(
+            fieldId + "Error"
+        );
+
+
+    const field =
+        document.getElementById(fieldId);
+
+
+    // textContent keeps any user text from being parsed as HTML
+    error.textContent = message;
+
+
+    if (
+        field &&
+        fieldId !== "guestForm"
+    ) {
+
+        field.classList.toggle(
+            "guest-invalid",
+            message !== ""
+        );
+
+
+        field.setAttribute(
+            "aria-invalid",
+            message !== ""
+        );
+    }
+}
+
+
+function clearGuestErrors() {
+
+    setGuestError("guestMessage", "");
+
+    setGuestError("guestContact", "");
+
+    setGuestError("guestForm", "");
+}
+
+
+/*
+   Returns { value, error }. value is the cleaned
+   contact detail that gets saved.
+*/
+
+function validateGuestContact(
+    type,
+    raw
+) {
+
+    const value =
+        raw.trim();
+
+
+    if (value === "") {
+
+        return {
+            value: "",
+            error: "Please enter how we can contact you."
+        };
+    }
+
+
+    if (type === "email") {
+
+        const emailPattern =
+            /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+
+        if (
+            value.length > 254 ||
+            !emailPattern.test(value)
+        ) {
+
+            return {
+                value: "",
+                error: "Please enter a valid email address."
+            };
+        }
+
+
+        return {
+            value: value.toLowerCase(),
+            error: ""
+        };
+    }
+
+
+    if (type === "mobile") {
+
+        // Allow spaces and dashes while typing, then strip them
+        const mobile =
+            value.replace(/[\s-]/g, "");
+
+
+        if (
+            !/^(09\d{9}|\+639\d{9})$/.test(mobile)
+        ) {
+
+            return {
+                value: "",
+                error: "Please enter a valid PH mobile number (09XXXXXXXXX or +639XXXXXXXXX)."
+            };
+        }
+
+
+        return {
+            value: mobile,
+            error: ""
+        };
+    }
+
+
+    if (type === "facebook") {
+
+        const linkPattern =
+            /^(https?:\/\/)?(www\.|m\.|web\.)?(facebook\.com|fb\.com)\/[A-Za-z0-9.\-_/?=&%]+$/i;
+
+
+        const namePattern =
+            /^[\p{L}][\p{L} .'-]{1,99}$/u;
+
+
+        if (
+            value.length > 200 ||
+            (
+                !linkPattern.test(value) &&
+                !namePattern.test(value)
+            )
+        ) {
+
+            return {
+                value: "",
+                error: "Please enter a Facebook profile link (facebook.com/...) or your Facebook name."
+            };
+        }
+
+
+        return {
+            value: value,
+            error: ""
+        };
+    }
+
+
+    return {
+        value: "",
+        error: "Please choose a contact type."
+    };
+}
+
+
+function submitGuestFeedback(event) {
+
+    event.preventDefault();
+
+
+    clearGuestErrors();
+
+
+    /*
+       Honeypot: people never see this field.
+       If it's filled, act like it worked but save nothing.
+    */
+
+    const honeypot =
+        document
+            .getElementById("guestWebsite")
+            .value;
+
+
+    if (honeypot !== "") {
+
+        showGuestThanks();
+
+        return;
+    }
+
+
+    const message =
+        document
+            .getElementById("guestMessage")
+            .value
+            .trim();
+
+
+    const contactType =
+        getGuestContactType();
+
+
+    const contact =
+        validateGuestContact(
+            contactType,
+            document
+                .getElementById("guestContact")
+                .value
+        );
+
+
+    let valid = true;
+
+
+    if (message === "") {
+
+        setGuestError(
+            "guestMessage",
+            "Please write your complaint or feedback."
+        );
+
+        valid = false;
+
+    } else if (message.length < 10) {
+
+        setGuestError(
+            "guestMessage",
+            "Please add a bit more detail (at least 10 characters)."
+        );
+
+        valid = false;
+
+    } else if (message.length > GUEST_MESSAGE_MAX) {
+
+        setGuestError(
+            "guestMessage",
+            "Please keep it under " + GUEST_MESSAGE_MAX + " characters."
+        );
+
+        valid = false;
+    }
+
+
+    if (contact.error !== "") {
+
+        setGuestError(
+            "guestContact",
+            contact.error
+        );
+
+        valid = false;
+    }
+
+
+    if (!valid) {
+
+        const firstInvalid =
+            document.querySelector(
+                "#guestForm .guest-invalid"
+            );
+
+
+        if (firstInvalid) {
+
+            firstInvalid.focus();
+        }
+
+        return;
+    }
+
+
+    /*
+       Simple spam protection: one submission
+       every 30 seconds from this browser.
+    */
+
+    const lastSubmit =
+        Number(
+            localStorage.getItem(
+                GUEST_LAST_SUBMIT_KEY
+            )
+        ) || 0;
+
+
+    if (
+        Date.now() - lastSubmit
+        < GUEST_COOLDOWN_MS
+    ) {
+
+        setGuestError(
+            "guestForm",
+            "You just sent a concern. Please wait a moment before sending another."
+        );
+
+        return;
+    }
+
+
+    let submissions =
+        JSON.parse(
+            localStorage.getItem(
+                GUEST_STORAGE_KEY
+            )
+        ) || [];
+
+
+    submissions.push({
+
+        id: Date.now(),
+
+        message: message,
+
+        contact_type: contactType,
+
+        contact_value: contact.value,
+
+        created_at:
+            new Date().toISOString(),
+
+        status: "new"
+
+    });
+
+
+    localStorage.setItem(
+        GUEST_STORAGE_KEY,
+        JSON.stringify(submissions)
+    );
+
+
+    localStorage.setItem(
+        GUEST_LAST_SUBMIT_KEY,
+        String(Date.now())
+    );
+
+
+    showGuestThanks();
+}
+
+
+function showGuestThanks() {
+
+    document
+        .getElementById("guestForm")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("guestThanks")
+        .classList.remove("hidden");
+}
+
+
+/* =========================================================
    INITIALIZE
 ========================================================= */
 

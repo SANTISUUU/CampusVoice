@@ -79,6 +79,15 @@
 
             </button>
 
+
+            <button
+                class="landing-btn guest-btn"
+                onclick="showGuest()">
+
+                Guest
+
+            </button>
+
         </div>
 
 
@@ -240,11 +249,287 @@
         </div>
 
 
+        <div class="auth-divider">
+
+            <span>or</span>
+
+        </div>
+
+
+        <button
+            class="auth-guest"
+            onclick="showGuest()">
+
+            Continue as Guest
+
+        </button>
+
+
+        <p class="auth-guest-note">
+
+            Not part of the department? Send us a
+            complaint or feedback as a guest.
+
+        </p>
+
+
         <button
             class="back-home"
             onclick="backHome()">
 
             ← Back to Home
+
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     GUEST FEEDBACK PAGE
+     Public form only. Never logs in or opens the platform.
+========================================================= -->
+
+<section id="guestPage">
+
+    <div class="auth-card guest-card">
+
+        <div class="auth-logo">
+
+            Campus<span>Voice</span>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form
+            id="guestForm"
+            novalidate
+            onsubmit="submitGuestFeedback(event)">
+
+            <h2>
+
+                Guest Feedback
+
+            </h2>
+
+
+            <p class="auth-description">
+
+                Not a member of the Computer Studies
+                Department? Send us your complaint or
+                feedback and we will get back to you.
+
+            </p>
+
+
+            <p class="guest-required-note">
+
+                <span class="guest-asterisk">*</span>
+                Indicates required question
+
+            </p>
+
+
+            <!-- Q1 -->
+
+            <div class="guest-question">
+
+                <label
+                    class="guest-label"
+                    for="guestMessage">
+
+                    Complaint or Feedback?
+                    <span class="guest-asterisk">*</span>
+
+                </label>
+
+
+                <textarea
+                    class="auth-input guest-textarea"
+                    id="guestMessage"
+                    maxlength="2000"
+                    placeholder="Write your complaint or feedback here..."
+                    oninput="updateGuestCounter()"></textarea>
+
+
+                <div class="guest-meta">
+
+                    <span
+                        class="guest-error"
+                        id="guestMessageError">
+                    </span>
+
+                    <span
+                        class="guest-counter"
+                        id="guestCounter">
+
+                        0 / 2000
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Q2 -->
+
+            <div class="guest-question">
+
+                <span class="guest-label">
+
+                    How should we contact you to address your concern?
+                    <span class="guest-asterisk">*</span>
+
+                </span>
+
+
+                <div
+                    class="guest-contact-types"
+                    role="radiogroup"
+                    aria-label="Contact type">
+
+                    <label class="guest-chip">
+
+                        <input
+                            type="radio"
+                            name="guestContactType"
+                            value="email"
+                            onchange="updateGuestContactInput()"
+                            checked>
+
+                        <span>Email</span>
+
+                    </label>
+
+
+                    <label class="guest-chip">
+
+                        <input
+                            type="radio"
+                            name="guestContactType"
+                            value="mobile"
+                            onchange="updateGuestContactInput()">
+
+                        <span>Mobile no.</span>
+
+                    </label>
+
+
+                    <label class="guest-chip">
+
+                        <input
+                            type="radio"
+                            name="guestContactType"
+                            value="facebook"
+                            onchange="updateGuestContactInput()">
+
+                        <span>Facebook</span>
+
+                    </label>
+
+                </div>
+
+
+                <input
+                    class="auth-input"
+                    id="guestContact"
+                    type="email"
+                    maxlength="254"
+                    placeholder="e.g. juan@example.com"
+                    aria-label="Contact details">
+
+
+                <span
+                    class="guest-error"
+                    id="guestContactError">
+                </span>
+
+            </div>
+
+
+            <!-- Honeypot (hidden from people, bots fill it) -->
+
+            <div
+                class="guest-hp"
+                aria-hidden="true">
+
+                <label for="guestWebsite">Website</label>
+
+                <input
+                    id="guestWebsite"
+                    type="text"
+                    tabindex="-1"
+                    autocomplete="off">
+
+            </div>
+
+
+            <p class="guest-privacy">
+
+                🔒 Your contact details will only be used
+                to respond to this concern.
+
+            </p>
+
+
+            <span
+                class="guest-error guest-form-error"
+                id="guestFormError">
+            </span>
+
+
+            <button
+                type="submit"
+                class="auth-submit">
+
+                Submit
+
+            </button>
+
+        </form>
+
+
+
+        <!-- CONFIRMATION -->
+
+        <div
+            id="guestThanks"
+            class="guest-thanks hidden">
+
+            <div class="guest-thanks-icon">
+
+                ✓
+
+            </div>
+
+
+            <h2>
+
+                Thank you!
+
+            </h2>
+
+
+            <p class="auth-description">
+
+                We received your concern and will reach
+                out using the contact you provided.
+
+            </p>
+
+        </div>
+
+
+        <button
+            class="back-home"
+            onclick="guestBackToLogin()">
+
+            ← Back to login
 
         </button>
 

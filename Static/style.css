@@ -1519,3 +1519,382 @@ footer {
     }
 
 }
+
+
+/* =========================================================
+   GUEST FEEDBACK
+========================================================= */
+
+/* Landing guest button */
+
+.guest-btn {
+
+    background: transparent;
+
+    color: white;
+
+    border:
+        1px solid rgba(255,255,255,0.55);
+}
+
+.guest-btn:hover {
+
+    background: rgba(255,255,255,0.12);
+}
+
+
+/* Auth card guest option */
+
+.auth-divider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin: 20px 0 14px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: var(--border);
+}
+
+.auth-guest {
+
+    width: 100%;
+
+    padding: 12px;
+
+    border:
+        1px solid var(--primary);
+
+    border-radius: 9px;
+
+    background: white;
+
+    color: var(--primary);
+
+    font-weight: bold;
+
+    font-size: 15px;
+
+    transition: 0.2s;
+}
+
+.auth-guest:hover {
+
+    background: var(--primary-light);
+}
+
+.auth-guest-note {
+
+    text-align: center;
+
+    margin-top: 8px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+/* Guest page */
+
+#guestPage {
+
+    min-height: 100vh;
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 25px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4c40cf,
+            #8275f5
+        );
+}
+
+.guest-card {
+
+    width: 560px;
+
+    border-top:
+        8px solid var(--primary);
+}
+
+.guest-required-note {
+
+    color: var(--red);
+
+    font-size: 13px;
+
+    margin-bottom: 16px;
+}
+
+.guest-asterisk {
+
+    color: var(--red);
+}
+
+
+/* Question block */
+
+.guest-question {
+
+    padding: 18px;
+
+    margin-bottom: 14px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 12px;
+}
+
+.guest-label {
+
+    display: block;
+
+    font-weight: bold;
+
+    font-size: 15px;
+
+    margin-bottom: 12px;
+}
+
+.guest-question .auth-input {
+
+    margin-bottom: 6px;
+}
+
+.guest-textarea {
+
+    min-height: 130px;
+
+    resize: vertical;
+
+    line-height: 1.6;
+}
+
+.guest-meta {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.guest-counter {
+
+    margin-left: auto;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    white-space: nowrap;
+}
+
+
+/* Contact type chips */
+
+.guest-contact-types {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+.guest-chip {
+
+    position: relative;
+}
+
+.guest-chip input {
+
+    position: absolute;
+
+    opacity: 0;
+}
+
+.guest-chip span {
+
+    display: inline-block;
+
+    padding: 8px 16px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 50px;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.guest-chip input:checked + span {
+
+    background: var(--primary-light);
+
+    border-color: var(--primary);
+
+    color: var(--primary);
+
+    font-weight: bold;
+}
+
+.guest-chip input:focus-visible + span {
+
+    box-shadow:
+        0 0 0 3px rgba(91,78,232,0.25);
+}
+
+
+/* Errors */
+
+.guest-error {
+
+    display: block;
+
+    color: var(--red);
+
+    font-size: 13px;
+}
+
+.guest-error:empty {
+
+    display: none;
+}
+
+.guest-invalid,
+.guest-invalid:focus {
+
+    border-color: var(--red);
+
+    box-shadow:
+        0 0 0 3px rgba(217,74,74,0.10);
+}
+
+.guest-form-error {
+
+    margin-bottom: 12px;
+}
+
+
+/* Honeypot: kept off-screen for people */
+
+.guest-hp {
+
+    position: absolute;
+
+    left: -9999px;
+
+    width: 1px;
+
+    height: 1px;
+
+    overflow: hidden;
+}
+
+
+/* Privacy note */
+
+.guest-privacy {
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    margin: 4px 0 16px;
+}
+
+
+/* Confirmation */
+
+.guest-thanks {
+
+    text-align: center;
+
+    padding: 10px 0;
+}
+
+.guest-thanks-icon {
+
+    width: 64px;
+
+    height: 64px;
+
+    margin: 0 auto 14px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #e5f5ec;
+
+    color: var(--green);
+
+    font-size: 32px;
+
+    font-weight: bold;
+}
+
+
+@media(max-width: 600px) {
+
+    #guestPage {
+
+        padding: 14px;
+
+        align-items: flex-start;
+
+    }
+
+
+    .guest-card {
+
+        padding: 22px;
+
+    }
+
+
+    .guest-question {
+
+        padding: 14px;
+
+    }
+
+}
