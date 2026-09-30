@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CampusVoice | Student Feedback Platform</title>
+
+<link rel="stylesheet" href="../static/style.css">
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     LANDING PAGE
+========================================================= -->
+
+<section id="landingPage">
+
+    <div class="landing-content">
+
+        <div class="landing-badge">
+
+            COMPUTER STUDIES DEPARTMENT
+
+        </div>
+
+
+        <div class="landing-logo">
+
+            Campus<span>Voice</span>
+
+        </div>
+
+
+        <h1>
+
+            Your Voice. Your Campus.<br>
+
+            Your Feedback Matters.
+
+        </h1>
+
+
+        <p class="landing-description">
+
+            A student-centered feedback and discussion
+            platform where students can share their
+            experiences, rate services and facilities,
+            discuss concerns, and help identify areas
+            for improvement within the Computer Studies
+            Department.
+
+        </p>
+
+
+        <div class="landing-buttons">
+
+            <button
+                class="landing-btn login-btn"
+                onclick="showLogin()">
+
+                Log In
+
+            </button>
+
+
+            <button
+                class="landing-btn signup-btn"
+                onclick="showSignup()">
+
+                Create an Account
+
+            </button>
+
+        </div>
+
+
+        <div class="landing-footer">
+
+            CampusVoice · Student Feedback & Discussion Platform
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     AUTH PAGE
+========================================================= -->
+
+<section id="authPage">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">
+
+            Campus<span>Voice</span>
+
+        </div>
+
+
+        <!-- LOGIN -->
+
+        <div id="loginForm">
+
+            <h2>
+
+                Welcome Back
+
+            </h2>
+
+
+            <p class="auth-description">
+
+                Log in to access the CampusVoice
+                student feedback platform.
+
+            </p>
+
+
+            <input
+                class="auth-input"
+                id="loginUsername"
+                type="text"
+                placeholder="Username">
+
+
+            <input
+                class="auth-input"
+                id="loginPassword"
+                type="password"
+                placeholder="Password">
+
+
+            <button
+                class="auth-submit"
+                onclick="loginUser()">
+
+                Log In
+
+            </button>
+
+
+            <p class="auth-switch">
+
+                Don't have an account?
+
+                <span onclick="showSignup()">
+
+                    Sign Up
+
+                </span>
+
+            </p>
+
+        </div>
+
+
+
+        <!-- SIGN UP -->
+
+        <div
+            id="signupForm"
+            class="hidden">
+
+            <h2>
+
+                Create Your Account
+
+            </h2>
+
+
+            <p class="auth-description">
+
+                Join CampusVoice and share your
+                student experience.
+
+            </p>
+
+
+            <input
+                class="auth-input"
+                id="signupUsername"
+                type="text"
+                placeholder="Username">
+
+
+            <input
+                class="auth-input"
+                id="signupEmail"
+                type="email"
+                placeholder="Email Address">
+
+
+            <input
+                class="auth-input"
+                id="signupPassword"
+                type="password"
+                placeholder="Password">
+
+
+            <input
+                class="auth-input"
+                id="signupConfirm"
+                type="password"
+                placeholder="Confirm Password">
+
+
+            <button
+                class="auth-submit"
+                onclick="signupUser()">
+
+                Create Account
+
+            </button>
+
+
+            <p class="auth-switch">
+
+                Already have an account?
+
+                <span onclick="showLogin()">
+
+                    Log In
+
+                </span>
+
+            </p>
+
+        </div>
+
+
+        <button
+            class="back-home"
+            onclick="backHome()">
+
+            ← Back to Home
+
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     MAIN PAGE
+========================================================= -->
+
+<section id="mainPage">
+
+
+<!-- HEADER -->
+
+<header class="header">
+
+    <div class="logo">
+
+        Campus<span>Voice</span>
+
+    </div>
+
+
+    <div class="header-right">
+
+        <span
+            class="user-pill"
+            id="currentUser">
+
+        </span>
+
+
+        <button
+            class="logout-btn"
+            onclick="logout()">
+
+            Log Out
+
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<!-- CONTENT -->
+
+<main class="container">
+
+
+    <!-- HERO -->
+
+    <section class="dashboard-hero">
+
+        <h1>
+
+            Computer Studies Department
+
+        </h1>
+
+
+        <p>
+
+            Welcome to CampusVoice. Share your
+            experiences, provide feedback, join
+            discussions, and help identify areas
+            that may need improvement.
+
+        </p>
+
+
+        <div class="stats-grid">
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+
+                    Overall Rating
+
+                </div>
+
+
+                <div
+                    class="stat-value"
+                    id="overallRating">
+
+                    0.0 / 5
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+
+                    Student Reviews
+
+                </div>
+
+
+                <div
+                    class="stat-value"
+                    id="totalReviews">
+
+                    0
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+
+                    Discussion Replies
+
+                </div>
+
+
+                <div
+                    class="stat-value"
+                    id="totalReplies">
+
+                    0
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- EVALUATION DIMENSIONS -->
+
+    <h2 class="section-title">
+
+        Feedback Areas
+
+    </h2>
+
+
+    <section class="category-grid">
+
+
+        <div class="category-card">
+
+            <div class="category-icon">
+
+                ℹ️
+
+            </div>
+
+
+            <h3>
+
+                Information Accessibility
+
+            </h3>
+
+
+            <p>
+
+                Share feedback about how easily
+                students can access information,
+                announcements, instructions, and
+                other relevant resources.
+
+            </p>
+
+        </div>
+
+
+
+        <div class="category-card">
+
+            <div class="category-icon">
+
+                🖥️
+
+            </div>
+
+
+            <h3>
+
+                Quality & Condition
+
+            </h3>
+
+
+            <p>
+
+                Evaluate the quality and condition
+                of facilities, equipment, and
+                services experienced by students.
+
+            </p>
+
+        </div>
+
+
+
+        <div class="category-card">
+
+            <div class="category-icon">
+
+                💬
+
+            </div>
+
+
+            <h3>
+
+                Responsiveness
+
+            </h3>
+
+
+            <p>
+
+                Share experiences about how concerns,
+                questions, and requests are addressed.
+
+            </p>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- WRITE REVIEW -->
+
+    <section class="review-form">
+
+        <h2>
+
+            Share Your Feedback
+
+        </h2>
+
+
+        <p class="form-subtitle">
+
+            Rate your experience from 1 to 5 stars
+            and provide details that may help the
+            department understand student concerns.
+
+        </p>
+
+
+        <!-- Category -->
+
+        <div class="review-category">
+
+            <label for="reviewCategory">
+
+                Feedback Area
+
+            </label>
+
+
+            <select id="reviewCategory">
+
+                <option value="Information Accessibility">
+
+                    Information Accessibility
+
+                </option>
+
+
+                <option value="Quality & Condition">
+
+                    Quality & Condition
+
+                </option>
+
+
+                <option value="Responsiveness">
+
+                    Responsiveness
+
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- Stars -->
+
+        <div class="star-rating">
+
+            <span
+                class="star"
+                onclick="selectStar(1)">
+
+                ★
+
+            </span>
+
+
+            <span
+                class="star"
+                onclick="selectStar(2)">
+
+                ★
+
+            </span>
+
+
+            <span
+                class="star"
+                onclick="selectStar(3)">
+
+                ★
+
+            </span>
+
+
+            <span
+                class="star"
+                onclick="selectStar(4)">
+
+                ★
+
+            </span>
+
+
+            <span
+                class="star"
+                onclick="selectStar(5)">
+
+                ★
+
+            </span>
+
+        </div>
+
+
+        <!-- Text -->
+
+        <textarea
+            id="reviewInput"
+            placeholder="Write your feedback here...">
+        </textarea>
+
+
+        <!-- Photo -->
+
+        <div class="upload-box">
+
+            <strong>
+
+                📷 Add a photo
+
+            </strong>
+
+
+            <div>
+
+                <input
+                    type="file"
+                    id="photoInput"
+                    accept="image/*"
+                    onchange="previewPhoto(event)">
+
+            </div>
+
+
+            <img
+                id="imagePreview"
+                class="image-preview"
+                alt="Preview">
+
+        </div>
+
+
+        <button
+            class="post-review-btn"
+            onclick="postReview()">
+
+            Submit Feedback
+
+        </button>
+
+    </section>
+
+
+
+    <!-- REVIEWS -->
+
+    <div class="review-toolbar">
+
+        <h2>
+
+            Student Feedback
+
+        </h2>
+
+
+        <input
+            class="search-box"
+            id="searchInput"
+            type="search"
+            placeholder="Search feedback..."
+            oninput="loadReviews()">
+
+    </div>
+
+
+    <div id="reviewsContainer">
+
+    </div>
+
+
+</main>
+
+
+
+<footer>
+
+    CampusVoice © 2026
+
+    <br>
+
+    Computer Studies Department · Student Feedback Platform
+
+</footer>
+
+
+</section>
+
+
+
+<script src="../static/script.js"></script>
+
+
+
+</body>
+
+</html>
