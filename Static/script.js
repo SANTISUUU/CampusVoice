@@ -1752,13 +1752,14 @@ async function submitGuestFeedback(event) {
     try {
 
         await api(
-            "/api/guest-feedback",
-            {
-                message: message,
-                contact_type: contactType,
-                contact_value: contact.value
-            }
-        );
+    "/api/guest-feedback",
+    {
+        role: selectedRole,
+        message: message,
+        contact_type: contactType,
+        contact_value: contact.value
+    }
+);
 
     } catch (failure) {
 
@@ -1934,8 +1935,9 @@ function renderAdminList(containerId, items, kind) {
                 ? escapeHTML(item.username) + " · " +
                   escapeHTML(item.category) + " · " +
                   "★".repeat(item.rating)
-                : "Guest · " + escapeHTML(item.contact_type) +
-                  ": " + escapeHTML(item.contact_value);
+                : "Guest (" + escapeHTML(item.role || "Not specified") + ") · " +
+  escapeHTML(item.contact_type) +
+  ": " + escapeHTML(item.contact_value);
 
         const body =
             kind === "posts"
