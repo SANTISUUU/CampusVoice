@@ -127,6 +127,15 @@ CREATE TABLE IF NOT EXISTS reports (
     reason     TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
 );
+
+CREATE TABLE IF NOT EXISTS guest_feedback (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    message       TEXT NOT NULL,
+    contact_type  TEXT NOT NULL CHECK (contact_type IN ('email', 'mobile', 'facebook')),
+    contact_value TEXT NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'pending',
+    created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+);
 """
 
 
@@ -151,6 +160,20 @@ def init_db():
     db = sqlite3.connect(DB_PATH)
 
     db.executescript(SCHEMA)
+
+    user_cols = [row[1] for row in db.execute("PRAGMA table_info(users)")]
+
+    if "is_admin" not in user_cols:
+        db.execute(
+            "ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0"
+        )
+
+    review_cols = [row[1] for row in db.execute("PRAGMA table_info(reviews)")]
+
+    if "status" not in review_cols:
+        db.execute(
+            "ALTER TABLE reviews ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"
+        )
 
     db.commit()
 
@@ -191,7 +214,7 @@ def login_required(view):
 
         if "uid" in session:
             user = get_db().execute(
-                "SELECT id, username, student_number, created_at "
+                "SELECT id, username, student_number, created_at, is_admin "
                 "FROM users WHERE id = ?",
                 (session["uid"],),
             ).fetchone()
@@ -214,6 +237,7 @@ def user_json(user):
         "username": user["username"],
         "student_number": user["student_number"],
         "created_at": user["created_at"],
+        "is_admin": bool(user["is_admin"]),
     }
 
 
@@ -229,7 +253,7 @@ def fetch_reviews(review_id=None):
     reviews = db.execute(
         f"""
         SELECT r.id, r.user_id, u.username, r.category, r.rating,
-               r.text, r.image, r.created_at
+               r.text, r.image, r.created_at, r.status
           FROM reviews r
           JOIN users u ON u.id = r.user_id
           {where}
@@ -281,6 +305,7 @@ def fetch_reviews(review_id=None):
             "text": row["text"],
             "image": row["image"],
             "date": row["created_at"],
+            "status": row["status"],
             "likes": len(likes[row["id"]]),
             "liked_by": likes[row["id"]],
             "dislikes": dislikes[row["id"]],
@@ -580,7 +605,139 @@ def report(review_id):
 
     return jsonify(ok=True), 201
 
+# =========================================================
+# GUEST FEEDBACK (public, no login needed)
+# =========================================================
 
+GUEST_EMAIL = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]{2,}$")
+
+GUEST_MOBILE = re.compile(r"^(09\d{9}|\+639\d{9})$")
+
+
+@app.post("/api/guest-feedback")
+def guest_feedback():
+    data = json_body()
+
+    if data is None:
+        return error("Invalid request.")
+
+    message = clean(data.get("message"), 2000)
+
+    contact_type = data.get("contact_type")
+
+    contact_value = clean(data.get("contact_value"), 254)
+
+    if not message or len(message) < 10:
+        return error("Please write at least 10 characters.")
+
+    if contact_type not in ("email", "mobile", "facebook") or not contact_value:
+        return error("Please give a valid way to contact you.")
+
+    if contact_type == "email" and not GUEST_EMAIL.match(contact_value):
+        return error("Please enter a valid email address.")
+
+    if contact_type == "mobile" and not GUEST_MOBILE.match(contact_value):
+        return error("Please enter a valid PH mobile number.")
+
+    db = get_db()
+
+    db.execute(
+        "INSERT INTO guest_feedback (message, contact_type, contact_value) "
+        "VALUES (?, ?, ?)",
+        (message, contact_type, contact_value),
+    )
+
+    db.commit()
+
+    return jsonify(ok=True), 201
+
+
+# =========================================================
+# ADMIN WORKLOAD TRACKING
+# =========================================================
+
+def admin_required(view):
+    @login_required
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if not g.user["is_admin"]:
+            return error("Admins only.", 403)
+
+        return view(*args, **kwargs)
+
+    return wrapper
+
+
+@app.get("/api/admin/workload")
+@admin_required
+def admin_workload():
+    db = get_db()
+
+    posts = [
+        dict(row) for row in db.execute(
+            "SELECT r.id, u.username, r.category, r.rating, r.text, "
+            "r.status, r.created_at AS date "
+            "FROM reviews r JOIN users u ON u.id = r.user_id "
+            "ORDER BY r.created_at DESC, r.id DESC"
+        )
+    ]
+
+    guests = [
+        dict(row) for row in db.execute(
+            "SELECT id, message, contact_type, contact_value, status, "
+            "created_at AS date FROM guest_feedback "
+            "ORDER BY created_at DESC, id DESC"
+        )
+    ]
+
+    items = posts + guests
+
+    pending = sum(1 for item in items if item["status"] == "pending")
+
+    return jsonify(
+        counts={
+            "pending": pending,
+            "completed": len(items) - pending,
+            "total": len(items),
+        },
+        posts=posts,
+        guests=guests,
+    )
+
+
+def set_status(table, item_id):
+    data = json_body()
+
+    status = data.get("status") if data else None
+
+    if status not in ("pending", "completed"):
+        return error("Invalid status.")
+
+    db = get_db()
+
+    cursor = db.execute(
+        f"UPDATE {table} SET status = ? WHERE id = ?",
+        (status, item_id),
+    )
+
+    db.commit()
+
+    if cursor.rowcount == 0:
+        return error("Not found.", 404)
+
+    return jsonify(ok=True)
+
+
+@app.post("/api/admin/posts/<int:item_id>/status")
+@admin_required
+def admin_post_status(item_id):
+    return set_status("reviews", item_id)
+
+
+@app.post("/api/admin/guests/<int:item_id>/status")
+@admin_required
+def admin_guest_status(item_id):
+    return set_status("guest_feedback", item_id)
 init_db()
 
 

@@ -567,6 +567,14 @@
 
         </span>
 
+        <button
+            class="logout-btn hidden"
+            id="adminBtn"
+            onclick="showAdmin()">
+
+            📊 Admin
+
+        </button>
 
         <button
             class="logout-btn"
@@ -978,7 +986,90 @@
 
 </section>
 
+<!-- =========================================================
+     ADMIN PAGE (only admins can open it)
+========================================================= -->
 
+<section id="adminPage">
+
+    <header class="header">
+
+        <div class="logo">
+
+            Campus<span>Voice</span> Admin
+
+        </div>
+
+        <div class="header-right">
+
+            <button
+                class="logout-btn"
+                onclick="hideAdmin()">
+
+                ← Back to Feedback
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+        <h2 class="section-title">Workload</h2>
+
+        <div class="admin-stats">
+
+            <div class="admin-stat">
+                <div class="admin-stat-label">Pending</div>
+                <div class="admin-stat-value pending-color" id="adminPending">0</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-label">Completed</div>
+                <div class="admin-stat-value done-color" id="adminCompleted">0</div>
+            </div>
+
+            <div class="admin-stat">
+                <div class="admin-stat-label">Total</div>
+                <div class="admin-stat-value" id="adminTotal">0</div>
+            </div>
+
+        </div>
+
+
+        <div class="review-toolbar">
+
+            <h2>Student Posts</h2>
+
+            <select
+                class="search-box"
+                id="adminFilter"
+                onchange="renderAdmin()">
+
+                <option value="all">Show all</option>
+                <option value="pending">Pending only</option>
+                <option value="completed">Completed only</option>
+
+            </select>
+
+        </div>
+
+        <div id="adminPosts"></div>
+
+
+        <div class="review-toolbar">
+
+            <h2>Guest Feedback</h2>
+
+        </div>
+
+        <div id="adminGuests"></div>
+
+    </main>
+
+</section>
 
 <script src="/static/script.js"></script>
 

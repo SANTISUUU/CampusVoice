@@ -1909,3 +1909,120 @@ footer {
     }
 
 }
+
+/* =========================================================
+   ADMIN PAGE
+========================================================= */
+
+#adminPage {
+
+    display: none;
+
+    min-height: 100vh;
+}
+
+.admin-stats {
+
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+.admin-stat {
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.admin-stat-label {
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+.admin-stat-value {
+
+    font-size: 30px;
+
+    font-weight: bold;
+}
+
+.pending-color { color: var(--orange); }
+
+.done-color { color: var(--green); }
+
+.admin-item {
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    padding: 18px;
+
+    margin-bottom: 14px;
+}
+
+.admin-item-top {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 4px;
+}
+
+.admin-item .review-text {
+
+    margin: 10px 0 12px;
+}
+
+.status-badge {
+
+    padding: 4px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: bold;
+}
+
+.status-badge.pending {
+
+    background: #fff2e0;
+
+    color: var(--orange);
+}
+
+.status-badge.completed {
+
+    background: #e5f5ec;
+
+    color: var(--green);
+}
+
+@media(max-width: 600px) {
+
+    .admin-stats {
+
+        grid-template-columns: 1fr;
+    }
+}

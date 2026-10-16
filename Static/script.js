@@ -358,6 +358,12 @@ function openMainPage() {
 
     mainPage.style.display = "block";
 
+    document.getElementById("adminPage").style.display = "none";
+
+    document
+        .getElementById("adminBtn")
+        .classList.toggle("hidden", !currentUser.is_admin);
+
 
     document.getElementById(
         "currentUser"
@@ -1596,7 +1602,7 @@ function validateGuestContact(
 }
 
 
-function submitGuestFeedback(event) {
+async function submitGuestFeedback(event) {
 
     event.preventDefault();
 
@@ -1730,36 +1736,24 @@ function submitGuestFeedback(event) {
     }
 
 
-    let submissions =
-        JSON.parse(
-            localStorage.getItem(
-                GUEST_STORAGE_KEY
-            )
-        ) || [];
+     // Send to the server instead of saving in the browser
+    try {
 
+        await api(
+            "/api/guest-feedback",
+            {
+                message: message,
+                contact_type: contactType,
+                contact_value: contact.value
+            }
+        );
 
-    submissions.push({
+    } catch (failure) {
 
-        id: Date.now(),
+        setGuestError("guestForm", failure.message);
 
-        message: message,
-
-        contact_type: contactType,
-
-        contact_value: contact.value,
-
-        created_at:
-            new Date().toISOString(),
-
-        status: "new"
-
-    });
-
-
-    localStorage.setItem(
-        GUEST_STORAGE_KEY,
-        JSON.stringify(submissions)
-    );
+        return;
+    }
 
 
     localStorage.setItem(
@@ -1821,4 +1815,170 @@ window.addEventListener(
     }
 );
 
+/* =========================================================
+   ADMIN WORKLOAD TRACKING
+========================================================= */
 
+const adminPage =
+    document.getElementById("adminPage");
+
+let adminData = null;
+
+
+async function showAdmin() {
+
+    mainPage.style.display = "none";
+
+    adminPage.style.display = "block";
+
+    window.scrollTo(0, 0);
+
+    await loadAdmin();
+}
+
+
+function hideAdmin() {
+
+    adminPage.style.display = "none";
+
+    mainPage.style.display = "block";
+}
+
+
+async function loadAdmin() {
+
+    try {
+
+        adminData = await api("/api/admin/workload");
+
+    } catch (failure) {
+
+        alert(failure.message);
+
+        return;
+    }
+
+    renderAdmin();
+}
+
+
+function renderAdmin() {
+
+    if (!adminData) {
+        return;
+    }
+
+    document.getElementById("adminPending").textContent =
+        adminData.counts.pending;
+
+    document.getElementById("adminCompleted").textContent =
+        adminData.counts.completed;
+
+    document.getElementById("adminTotal").textContent =
+        adminData.counts.total;
+
+    const filter =
+        document.getElementById("adminFilter").value;
+
+    const keep =
+        item => filter === "all" || item.status === filter;
+
+    renderAdminList(
+        "adminPosts",
+        adminData.posts.filter(keep),
+        "posts"
+    );
+
+    renderAdminList(
+        "adminGuests",
+        adminData.guests.filter(keep),
+        "guests"
+    );
+}
+
+
+function renderAdminList(containerId, items, kind) {
+
+    const container =
+        document.getElementById(containerId);
+
+    if (items.length === 0) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <p>Nothing here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = items.map(item => {
+
+        const done = item.status === "completed";
+
+        const title =
+            kind === "posts"
+                ? escapeHTML(item.username) + " · " +
+                  escapeHTML(item.category) + " · " +
+                  "★".repeat(item.rating)
+                : "Guest · " + escapeHTML(item.contact_type) +
+                  ": " + escapeHTML(item.contact_value);
+
+        const body =
+            kind === "posts"
+                ? item.text
+                : item.message;
+
+        return `
+
+            <article class="admin-item">
+
+                <div class="admin-item-top">
+
+                    <strong>${title}</strong>
+
+                    <span class="status-badge ${done ? "completed" : "pending"}">
+                        ${done ? "Completed" : "Pending"}
+                    </span>
+
+                </div>
+
+                <div class="review-date">${formatDate(item.date)}</div>
+
+                <div class="review-text">${escapeHTML(body)}</div>
+
+                <button
+                    class="review-action"
+                    onclick="setAdminStatus('${kind}', ${item.id}, '${done ? "pending" : "completed"}')">
+
+                    ${done ? "↩ Mark as Pending" : "✓ Mark as Completed"}
+
+                </button>
+
+            </article>
+
+        `;
+
+    }).join("");
+}
+
+
+async function setAdminStatus(kind, id, status) {
+
+    try {
+
+        await api(
+            "/api/admin/" + kind + "/" + id + "/status",
+            { status: status }
+        );
+
+    } catch (failure) {
+
+        alert(failure.message);
+
+        return;
+    }
+
+    await loadAdmin();
+}
