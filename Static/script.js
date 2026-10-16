@@ -13,6 +13,8 @@ let selectedRating = 0;
 
 let currentPhoto = "";
 
+let allReviews = [];
+
 
 /* =========================================================
    ELEMENTS
@@ -83,10 +85,76 @@ function backHome() {
 
 
 /* =========================================================
+   API HELPER
+========================================================= */
+
+/*
+   All data lives on the Flask server (campusvoice.db).
+   api(path) reads; api(path, body) sends JSON.
+*/
+
+async function api(path, body) {
+
+    const options = {
+
+        method:
+            body === undefined
+                ? "GET"
+                : "POST",
+
+        headers: {},
+
+        credentials: "same-origin"
+
+    };
+
+
+    if (body !== undefined) {
+
+        options.headers["Content-Type"] =
+            "application/json";
+
+        options.body =
+            JSON.stringify(body);
+    }
+
+
+    let response;
+
+    try {
+
+        response =
+            await fetch(path, options);
+
+    } catch (networkError) {
+
+        throw new Error(
+            "Can't reach the server. Is it running?"
+        );
+    }
+
+
+    const data =
+        await response.json().catch(() => ({}));
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            data.error || "Something went wrong."
+        );
+    }
+
+
+    return data;
+}
+
+
+/* =========================================================
    SIGN UP
 ========================================================= */
 
-function signupUser() {
+async function signupUser() {
 
     const username =
         document
@@ -95,9 +163,9 @@ function signupUser() {
             .trim();
 
 
-    const email =
+    const studentNumber =
         document
-            .getElementById("signupEmail")
+            .getElementById("signupStudentNumber")
             .value
             .trim();
 
@@ -116,13 +184,23 @@ function signupUser() {
 
     if (
         username === "" ||
-        email === "" ||
+        studentNumber === "" ||
         password === "" ||
         confirm === ""
     ) {
 
         alert(
             "Please complete all fields."
+        );
+
+        return;
+    }
+
+
+    if (!/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/.test(studentNumber)) {
+
+        alert(
+            "Student number must look like 21-0123-456."
         );
 
         return;
@@ -159,47 +237,23 @@ function signupUser() {
     }
 
 
-    let users =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceUsers"
-            )
-        ) || [];
+    try {
 
-
-    const exists =
-        users.some(
-            user =>
-                user.username.toLowerCase()
-                === username.toLowerCase()
+        await api(
+            "/api/signup",
+            {
+                username: username,
+                student_number: studentNumber,
+                password: password
+            }
         );
 
+    } catch (failure) {
 
-    if (exists) {
-
-        alert(
-            "That username is already registered."
-        );
+        alert(failure.message);
 
         return;
     }
-
-
-    users.push({
-
-        username: username,
-
-        email: email,
-
-        password: password
-
-    });
-
-
-    localStorage.setItem(
-        "campusVoiceUsers",
-        JSON.stringify(users)
-    );
 
 
     alert(
@@ -213,7 +267,7 @@ function signupUser() {
 
 
     document.getElementById(
-        "signupEmail"
+        "signupStudentNumber"
     ).value = "";
 
 
@@ -240,7 +294,7 @@ function signupUser() {
    LOGIN
 ========================================================= */
 
-function loginUser() {
+async function loginUser() {
 
     const username =
         document
@@ -268,41 +322,24 @@ function loginUser() {
     }
 
 
-    const users =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceUsers"
-            )
-        ) || [];
+    try {
 
-
-    const user =
-        users.find(
-            account =>
-                account.username.toLowerCase()
-                === username.toLowerCase()
-                &&
-                account.password === password
+        const data = await api(
+            "/api/login",
+            {
+                username: username,
+                password: password
+            }
         );
 
+        currentUser = data.user;
 
-    if (!user) {
+    } catch (failure) {
 
-        alert(
-            "Incorrect username or password."
-        );
+        alert(failure.message);
 
         return;
     }
-
-
-    currentUser = user;
-
-
-    localStorage.setItem(
-        "campusVoiceCurrentUser",
-        JSON.stringify(user)
-    );
 
 
     openMainPage();
@@ -336,14 +373,21 @@ function openMainPage() {
    LOGOUT
 ========================================================= */
 
-function logout() {
+async function logout() {
 
-    localStorage.removeItem(
-        "campusVoiceCurrentUser"
-    );
+    try {
+
+        await api("/api/logout", {});
+
+    } catch (failure) {
+
+        // Already logged out on the server; carry on
+    }
 
 
     currentUser = null;
+
+    allReviews = [];
 
 
     mainPage.style.display = "none";
@@ -476,7 +520,7 @@ function previewPhoto(event) {
    POST REVIEW
 ========================================================= */
 
-function postReview() {
+async function postReview() {
 
     if (!currentUser) {
 
@@ -520,61 +564,24 @@ function postReview() {
     }
 
 
-    let reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
+    try {
 
+        await api(
+            "/api/reviews",
+            {
+                category: category,
+                rating: selectedRating,
+                text: text,
+                image: currentPhoto
+            }
+        );
 
-    const review = {
+    } catch (failure) {
 
-        id: Date.now(),
+        alert(failure.message);
 
-        username:
-            currentUser.username,
-
-        category:
-            category,
-
-        rating:
-            selectedRating,
-
-        text:
-            text,
-
-        image:
-            currentPhoto,
-
-        date:
-            new Date().toLocaleDateString(
-                "en-US",
-                {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric"
-                }
-            ),
-
-        likes: 0,
-
-        dislikes: 0,
-
-        replies: [],
-
-        reports: []
-
-    };
-
-
-    reviews.unshift(review);
-
-
-    localStorage.setItem(
-        "campusVoiceReviews",
-        JSON.stringify(reviews)
-    );
+        return;
+    }
 
 
     /*
@@ -611,7 +618,7 @@ function postReview() {
         );
 
 
-    loadReviews();
+    await loadReviews();
 
 
     alert(
@@ -630,135 +637,31 @@ function postReview() {
 
 
 /* =========================================================
-   SAMPLE REVIEWS
+   LOAD REVIEWS
 ========================================================= */
 
-function createSampleReviews() {
+async function loadReviews() {
 
-    const existing =
-        localStorage.getItem(
-            "campusVoiceReviews"
-        );
+    try {
 
+        const data =
+            await api("/api/reviews");
 
-    if (existing) {
+        allReviews = data.reviews;
+
+    } catch (failure) {
+
+        alert(failure.message);
 
         return;
     }
 
 
-    const samples = [
-
-        {
-
-            id: 1001,
-
-            username:
-                "Juan Dela Cruz",
-
-            category:
-                "Quality & Condition",
-
-            rating: 5,
-
-            text:
-                "The computer laboratory was clean and the computers were working properly during our activity. The equipment made it easier to complete our programming tasks.",
-
-            image: "",
-
-            date:
-                "September 20, 2026",
-
-            likes: 12,
-
-            dislikes: 1,
-
-            replies: [],
-
-            reports: []
-
-        },
-
-
-        {
-
-            id: 1002,
-
-            username:
-                "Maria Santos",
-
-            category:
-                "Information Accessibility",
-
-            rating: 4,
-
-            text:
-                "Information about our laboratory schedule was available, but sometimes announcements could be posted earlier so students have more time to prepare.",
-
-            image: "",
-
-            date:
-                "September 18, 2026",
-
-            likes: 8,
-
-            dislikes: 2,
-
-            replies: [],
-
-            reports: []
-
-        },
-
-
-        {
-
-            id: 1003,
-
-            username:
-                "Alex Reyes",
-
-            category:
-                "Responsiveness",
-
-            rating: 4,
-
-            text:
-                "When we encountered a problem with one of the computers, our concern was addressed. More consistent response times would make the experience better.",
-
-            image: "",
-
-            date:
-                "September 15, 2026",
-
-            likes: 6,
-
-            dislikes: 1,
-
-            replies: [],
-
-            reports: []
-
-        }
-
-    ];
-
-
-    localStorage.setItem(
-        "campusVoiceReviews",
-        JSON.stringify(samples)
-    );
+    renderReviews();
 }
 
 
-/* =========================================================
-   LOAD REVIEWS
-========================================================= */
-
-function loadReviews() {
-
-    createSampleReviews();
-
+function renderReviews() {
 
     const container =
         document.getElementById(
@@ -769,12 +672,7 @@ function loadReviews() {
     container.innerHTML = "";
 
 
-    let reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
+    let reviews = allReviews;
 
 
     const search =
@@ -849,6 +747,19 @@ function loadReviews() {
    RENDER REVIEW
 ========================================================= */
 
+function formatDate(value) {
+
+    return new Date(value).toLocaleDateString(
+        "en-US",
+        {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        }
+    );
+}
+
+
 function renderReview(
     review,
     container
@@ -876,6 +787,7 @@ function renderReview(
         );
 
 
+    // The server only accepts image data URLs
     let imageHTML = "";
 
 
@@ -895,10 +807,7 @@ function renderReview(
     let repliesHTML = "";
 
 
-    if (
-        review.replies &&
-        review.replies.length > 0
-    ) {
+    if (review.replies.length > 0) {
 
         repliesHTML = `
 
@@ -940,6 +849,12 @@ function renderReview(
     }
 
 
+    /*
+       review.likes is the real number of likes (from the database).
+       review.liked_by is the list of usernames who liked this post.
+       TODO (team): show the names from review.liked_by here.
+    */
+
     element.innerHTML = `
 
         <div class="review-top">
@@ -948,7 +863,7 @@ function renderReview(
 
                 <div class="avatar">
 
-                    ${initials}
+                    ${escapeHTML(initials)}
 
                 </div>
 
@@ -966,7 +881,7 @@ function renderReview(
 
                     <div class="review-date">
 
-                        ${review.date}
+                        ${formatDate(review.date)}
 
                     </div>
 
@@ -1008,16 +923,28 @@ function renderReview(
         <div class="review-actions">
 
             <button
-                class="review-action"
+                class="review-action${
+                    review.my_reaction === "like"
+                        ? " reacted"
+                        : ""
+                }"
                 onclick="likeReview(${review.id})">
 
-                👍 Like ${review.likes}
+                👍 ${
+                    review.my_reaction === "like"
+                        ? "Unlike"
+                        : "Like"
+                } ${review.likes}
 
             </button>
 
 
             <button
-                class="review-action"
+                class="review-action${
+                    review.my_reaction === "dislike"
+                        ? " reacted"
+                        : ""
+                }"
                 onclick="dislikeReview(${review.id})">
 
                 👎 Dislike ${review.dislikes}
@@ -1051,8 +978,7 @@ function renderReview(
 
             <textarea
                 id="replyText-${review.id}"
-                placeholder="Write a reply to this feedback...">
-            </textarea>
+                placeholder="Write a reply to this feedback..."></textarea>
 
 
             <button
@@ -1081,9 +1007,9 @@ function renderReview(
 
 function likeReview(id) {
 
-    modifyReviewReaction(
+    reactToReview(
         id,
-        "likes"
+        "like"
     );
 }
 
@@ -1094,9 +1020,9 @@ function likeReview(id) {
 
 function dislikeReview(id) {
 
-    modifyReviewReaction(
+    reactToReview(
         id,
-        "dislikes"
+        "dislike"
     );
 }
 
@@ -1105,39 +1031,29 @@ function dislikeReview(id) {
    REACTION HELPER
 ========================================================= */
 
-function modifyReviewReaction(
+/*
+   The server adds, switches or removes the reaction and
+   guarantees one reaction per user per post.
+*/
+
+async function reactToReview(
     id,
-    property
+    kind
 ) {
 
-    let reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
+    try {
 
-
-    const review =
-        reviews.find(
-            item =>
-                item.id === id
+        await api(
+            "/api/reviews/" + id + "/react",
+            { kind: kind }
         );
 
+    } catch (failure) {
 
-    if (!review) {
+        alert(failure.message);
 
         return;
     }
-
-
-    review[property]++;
-
-
-    localStorage.setItem(
-        "campusVoiceReviews",
-        JSON.stringify(reviews)
-    );
 
 
     loadReviews();
@@ -1173,7 +1089,7 @@ function toggleReply(id) {
    SEND REPLY
 ========================================================= */
 
-function sendReply(id) {
+async function sendReply(id) {
 
     if (!currentUser) {
 
@@ -1205,54 +1121,22 @@ function sendReply(id) {
     }
 
 
-    let reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
+    try {
 
-
-    const review =
-        reviews.find(
-            item =>
-                item.id === id
+        await api(
+            "/api/reviews/" + id + "/reply",
+            { text: text }
         );
 
+    } catch (failure) {
 
-    if (!review) {
+        alert(failure.message);
 
         return;
     }
 
 
-    if (!review.replies) {
-
-        review.replies = [];
-    }
-
-
-    review.replies.push({
-
-        username:
-            currentUser.username,
-
-        text:
-            text,
-
-        date:
-            new Date().toLocaleDateString()
-
-    });
-
-
-    localStorage.setItem(
-        "campusVoiceReviews",
-        JSON.stringify(reviews)
-    );
-
-
-    loadReviews();
+    await loadReviews();
 
 
     alert(
@@ -1265,7 +1149,7 @@ function sendReply(id) {
    REPORT
 ========================================================= */
 
-function reportReview(id) {
+async function reportReview(id) {
 
     if (!currentUser) {
 
@@ -1292,51 +1176,19 @@ function reportReview(id) {
     }
 
 
-    let reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
+    try {
 
-
-    const review =
-        reviews.find(
-            item =>
-                item.id === id
+        await api(
+            "/api/reviews/" + id + "/report",
+            { reason: reason.trim() }
         );
 
+    } catch (failure) {
 
-    if (!review) {
+        alert(failure.message);
 
         return;
     }
-
-
-    if (!review.reports) {
-
-        review.reports = [];
-    }
-
-
-    review.reports.push({
-
-        username:
-            currentUser.username,
-
-        reason:
-            reason.trim(),
-
-        date:
-            new Date().toLocaleString()
-
-    });
-
-
-    localStorage.setItem(
-        "campusVoiceReviews",
-        JSON.stringify(reviews)
-    );
 
 
     alert(
@@ -1351,16 +1203,8 @@ function reportReview(id) {
 
 function updateStatistics() {
 
-    const reviews =
-        JSON.parse(
-            localStorage.getItem(
-                "campusVoiceReviews"
-            )
-        ) || [];
-
-
     const total =
-        reviews.length;
+        allReviews.length;
 
 
     let ratingTotal = 0;
@@ -1368,19 +1212,12 @@ function updateStatistics() {
     let replyTotal = 0;
 
 
-    reviews.forEach(
+    allReviews.forEach(
         review => {
 
-            ratingTotal +=
-                Number(review.rating);
+            ratingTotal += review.rating;
 
-
-            if (review.replies) {
-
-                replyTotal +=
-                    review.replies.length;
-            }
-
+            replyTotal += review.replies.length;
         }
     );
 
@@ -1954,23 +1791,22 @@ function showGuestThanks() {
 
 window.addEventListener(
     "load",
-    function() {
+    async function() {
 
-        const savedUser =
-            localStorage.getItem(
-                "campusVoiceCurrentUser"
-            );
+        // Ask the server whether this browser is logged in
+        try {
 
+            const data =
+                await api("/api/me");
 
-        if (savedUser) {
 
             currentUser =
-                JSON.parse(savedUser);
+                data.user;
 
 
             openMainPage();
 
-        } else {
+        } catch (failure) {
 
             landingPage.style.display =
                 "flex";
@@ -1984,3 +1820,5 @@ window.addEventListener(
 
     }
 );
+
+

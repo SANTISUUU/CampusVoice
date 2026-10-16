@@ -9,7 +9,7 @@
 
 <title>CampusVoice | Student Feedback Platform</title>
 
-<link rel="stylesheet" href="../static/style.css">
+<link rel="stylesheet" href="/static/style.css">
 
 </head>
 
@@ -206,9 +206,11 @@
 
             <input
                 class="auth-input"
-                id="signupEmail"
-                type="email"
-                placeholder="Email Address">
+                id="signupStudentNumber"
+                type="text"
+                inputmode="numeric"
+                maxlength="11"
+                placeholder="Student Number (e.g. 21-0123-456)">
 
 
             <input
@@ -949,7 +951,7 @@
             id="searchInput"
             type="search"
             placeholder="Search feedback..."
-            oninput="loadReviews()">
+            oninput="renderReviews()">
 
     </div>
 
@@ -978,7 +980,7 @@
 
 
 
-<script src="../static/script.js"></script>
+<script src="/static/script.js"></script>
 
 
 

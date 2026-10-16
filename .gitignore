@@ -1,0 +1,8 @@
+# Local database and secrets
+campusvoice.db
+.secret_key
+
+# Python
+__pycache__/
+*.pyc
+.venv/

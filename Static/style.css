@@ -1278,6 +1278,17 @@ button {
     background: #e9e8ef;
 }
 
+/* Your own like / dislike on a post */
+
+.review-action.reacted {
+
+    background: var(--primary-light);
+
+    color: var(--primary);
+
+    font-weight: bold;
+}
+
 
 .report-action {
 
