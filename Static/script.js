@@ -1606,8 +1606,20 @@ async function submitGuestFeedback(event) {
 
     event.preventDefault();
 
-
     clearGuestErrors();
+
+    // Get the selected guest role
+    const guestRole = document.getElementById("guestRole");
+    const selectedRole = guestRole.value;
+
+    // Require the guest to select a role
+    if (!selectedRole) {
+        alert("Please select your role: Student, Faculty, or Staff.");
+        guestRole.focus();
+        return;
+    }
+
+    // Keep the rest of your existing function below this point
 
 
     /*
