@@ -45,6 +45,9 @@ CATEGORIES = (
     "Responsiveness",
 )
 
+# Roles a guest can pick on the public feedback form
+GUEST_ROLES = ("Student", "Faculty", "Staff", "Guest")
+
 
 def load_secret_key():
     """Use SECRET_KEY if set, otherwise create and reuse a local key file."""
@@ -173,6 +176,16 @@ def init_db():
     if "status" not in review_cols:
         db.execute(
             "ALTER TABLE reviews ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'"
+        )
+
+    guest_cols = [
+        row[1] for row in db.execute("PRAGMA table_info(guest_feedback)")
+    ]
+
+    if "role" not in guest_cols:
+        # Older rows (before roles existed) stay as an empty role
+        db.execute(
+            "ALTER TABLE guest_feedback ADD COLUMN role TEXT NOT NULL DEFAULT ''"
         )
 
     db.commit()
@@ -621,11 +634,18 @@ def guest_feedback():
     if data is None:
         return error("Invalid request.")
 
+    role = data.get("role")
+
     message = clean(data.get("message"), 2000)
 
     contact_type = data.get("contact_type")
 
     contact_value = clean(data.get("contact_value"), 254)
+
+    if role not in GUEST_ROLES:
+        return error(
+            "Please select your role: Student, Faculty, Staff, or Guest."
+        )
 
     if not message or len(message) < 10:
         return error("Please write at least 10 characters.")
@@ -642,9 +662,10 @@ def guest_feedback():
     db = get_db()
 
     db.execute(
-        "INSERT INTO guest_feedback (message, contact_type, contact_value) "
-        "VALUES (?, ?, ?)",
-        (message, contact_type, contact_value),
+        "INSERT INTO guest_feedback "
+        "(role, message, contact_type, contact_value) "
+        "VALUES (?, ?, ?, ?)",
+        (role, message, contact_type, contact_value),
     )
 
     db.commit()
@@ -684,7 +705,7 @@ def admin_workload():
 
     guests = [
         dict(row) for row in db.execute(
-            "SELECT id, message, contact_type, contact_value, status, "
+            "SELECT id, role, message, contact_type, contact_value, status, "
             "created_at AS date FROM guest_feedback "
             "ORDER BY created_at DESC, id DESC"
         )
