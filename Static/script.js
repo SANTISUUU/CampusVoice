@@ -36,6 +36,8 @@ const mainPage =
 
 function showLogin() {
 
+    hideGuestPage();
+
     landingPage.style.display = "none";
 
     authPage.style.display = "flex";
@@ -56,6 +58,8 @@ function showLogin() {
 
 function showSignup() {
 
+    hideGuestPage();
+
     landingPage.style.display = "none";
 
     authPage.style.display = "flex";
@@ -75,6 +79,8 @@ function showSignup() {
 
 
 function backHome() {
+
+    hideGuestPage();
 
     landingPage.style.display = "flex";
 
@@ -352,6 +358,8 @@ async function loginUser() {
 
 function openMainPage() {
 
+    hideGuestPage();
+
     landingPage.style.display = "none";
 
     authPage.style.display = "none";
@@ -395,6 +403,8 @@ async function logout() {
 
     allReviews = [];
 
+
+    hideGuestPage();
 
     mainPage.style.display = "none";
 
@@ -1290,6 +1300,75 @@ const GUEST_LAST_SUBMIT_KEY =
 
 const GUEST_MESSAGE_MAX = 2000;
 
+// Only these roles are accepted (the server checks again)
+const GUEST_ROLES = ["Student", "Faculty", "Staff", "Guest"];
+
+
+// "Guest" alone stays "Guest"; the others read "Guest (Student)", etc.
+function guestRoleLabel(role) {
+
+    return role === "Guest"
+        ? "Guest"
+        : "Guest (" + role + ")";
+}
+
+
+// The role the guest picked in step 1
+let guestSelectedRole = "";
+
+
+// Step 1 -> Step 2: role chosen, show the feedback form
+function chooseGuestRole(role) {
+
+    if (!GUEST_ROLES.includes(role)) {
+
+        return;
+    }
+
+    guestSelectedRole = role;
+
+    document.getElementById("guestRoleBadge").textContent =
+        guestRoleLabel(role);
+
+    setGuestError("guestRole", "");
+
+    document
+        .getElementById("guestRoleStep")
+        .classList.add("hidden");
+
+    document
+        .getElementById("guestForm")
+        .classList.remove("hidden");
+
+    window.scrollTo(0, 0);
+}
+
+
+// Back to step 1 so the guest can change their role
+function showGuestRoleStep() {
+
+    document
+        .getElementById("guestForm")
+        .classList.add("hidden");
+
+    document
+        .getElementById("guestRoleStep")
+        .classList.remove("hidden");
+}
+
+
+// Make sure only the guest page is visible
+function hideGuestPage() {
+
+    const page =
+        document.getElementById("guestPage");
+
+    if (page) {
+
+        page.style.display = "none";
+    }
+}
+
 const GUEST_COOLDOWN_MS = 30 * 1000;
 
 
@@ -1356,8 +1435,16 @@ function resetGuestForm() {
         .reset();
 
 
+    // Always start at step 1 (choose a role)
+    guestSelectedRole = "";
+
     document
         .getElementById("guestForm")
+        .classList.add("hidden");
+
+
+    document
+        .getElementById("guestRoleStep")
         .classList.remove("hidden");
 
 
@@ -1481,6 +1568,8 @@ function setGuestError(
 
 
 function clearGuestErrors() {
+
+    setGuestError("guestRole", "");
 
     setGuestError("guestMessage", "");
 
@@ -1608,18 +1697,8 @@ async function submitGuestFeedback(event) {
 
     clearGuestErrors();
 
-    // Get the selected guest role
-    const guestRole = document.getElementById("guestRole");
-    const selectedRole = guestRole.value;
-
-    // Require the guest to select a role
-    if (!selectedRole) {
-        alert("Please select your role: Student, Faculty, or Staff.");
-        guestRole.focus();
-        return;
-    }
-
-    // Keep the rest of your existing function below this point
+    const selectedRole =
+        guestSelectedRole;
 
 
     /*
@@ -1662,6 +1741,17 @@ async function submitGuestFeedback(event) {
 
 
     let valid = true;
+
+
+    if (!GUEST_ROLES.includes(selectedRole)) {
+
+        setGuestError(
+            "guestRole",
+            "Please choose your role first (Student, Faculty, Staff, or Guest)."
+        );
+
+        valid = false;
+    }
 
 
     if (message === "") {
@@ -1775,11 +1865,20 @@ async function submitGuestFeedback(event) {
     );
 
 
-    showGuestThanks();
+    showGuestThanks(selectedRole);
 }
 
 
-function showGuestThanks() {
+function showGuestThanks(role) {
+
+    const thanksRole =
+        document.getElementById("guestThanksRole");
+
+    thanksRole.textContent =
+        GUEST_ROLES.includes(role)
+            ? "Submitted as: " + guestRoleLabel(role)
+            : "";
+
 
     document
         .getElementById("guestForm")
@@ -1799,6 +1898,9 @@ function showGuestThanks() {
 window.addEventListener(
     "load",
     async function() {
+
+        // The guest page only opens from the Guest button
+        hideGuestPage();
 
         // Ask the server whether this browser is logged in
         try {
@@ -1935,7 +2037,7 @@ function renderAdminList(containerId, items, kind) {
                 ? escapeHTML(item.username) + " · " +
                   escapeHTML(item.category) + " · " +
                   "★".repeat(item.rating)
-                : "Guest (" + escapeHTML(item.role || "Not specified") + ") · " +
+                : escapeHTML(guestRoleLabel(item.role || "Not specified")) + " · " +
   escapeHTML(item.contact_type) +
   ": " + escapeHTML(item.contact_value);
 
