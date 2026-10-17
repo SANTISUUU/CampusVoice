@@ -294,7 +294,7 @@
      Public form only. Never logs in or opens the platform.
 ========================================================= -->
 
-<section id="guestPage">
+<section id="guestPage" style="display:none">
 
     <div class="auth-card guest-card">
 
@@ -302,28 +302,58 @@
             Campus<span>Voice</span>
         </div>
 
-        <!-- Guest Role Selection -->
-        <div class="form-group">
-            <label for="guestRole">I am a:</label>
-            <select id="guestRole" name="guestRole" required>
-                <option value="">Select your role</option>
-                <option value="Student">Student</option>
-                <option value="Faculty">Faculty</option>
-                <option value="Staff">Staff</option>
-            </select>
+
+        <!-- STEP 1: CHOOSE ROLE -->
+
+        <div id="guestRoleStep">
+
+            <h2>Continue as Guest</h2>
+
+            <p class="auth-description">
+                Please tell us who you are so we know
+                how to respond to your concern.
+            </p>
+
+            <div class="guest-role-options">
+
+                <button
+                    type="button"
+                    class="auth-submit guest-role-btn"
+                    onclick="chooseGuestRole('Student')">
+                    🎓 Student
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-submit guest-role-btn"
+                    onclick="chooseGuestRole('Faculty')">
+                    👩‍🏫 Faculty
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-submit guest-role-btn"
+                    onclick="chooseGuestRole('Staff')">
+                    🧑‍💼 Staff
+                </button>
+
+                <button
+                    type="button"
+                    class="auth-submit guest-role-btn"
+                    onclick="chooseGuestRole('Guest')">
+                    🙋 Guest
+                </button>
+
+            </div>
+
         </div>
 
-        <!-- Keep your existing guest feedback form below this line -->
 
-    </div>
-
-</section>
-
-
-        <!-- FORM -->
+        <!-- STEP 2: FORM (hidden until a role is chosen) -->
 
         <form
             id="guestForm"
+            class="hidden"
             novalidate
             onsubmit="submitGuestFeedback(event)">
 
@@ -349,6 +379,32 @@
                 Indicates required question
 
             </p>
+
+
+            <!-- Role (Student / Faculty / Staff) -->
+
+            <div class="guest-question">
+
+                <span class="guest-label">Submitting as</span>
+
+                <span
+                    class="guest-role-badge"
+                    id="guestRoleBadge">
+                </span>
+
+                <button
+                    type="button"
+                    class="back-home"
+                    onclick="showGuestRoleStep()">
+                    Change role
+                </button>
+
+                <span
+                    class="guest-error"
+                    id="guestRoleError">
+                </span>
+
+            </div>
 
 
             <!-- Q1 -->
@@ -538,6 +594,9 @@
                 out using the contact you provided.
 
             </p>
+
+
+            <p class="guest-role-badge" id="guestThanksRole"></p>
 
         </div>
 
