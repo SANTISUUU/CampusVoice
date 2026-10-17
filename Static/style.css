@@ -1849,6 +1849,88 @@ footer {
 }
 
 
+/* Role selection (step 1 of the guest page) */
+
+.guest-role-options {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+
+    margin: 6px 0 4px;
+}
+
+.guest-role-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 15px;
+
+    font-size: 16px;
+}
+
+.guest-role-btn:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(91,78,232,0.28);
+}
+
+
+/* Selected role shown on the form and thank-you screen */
+
+.guest-role-badge {
+
+    display: inline-block;
+
+    margin: 2px 0 4px;
+
+    padding: 6px 14px;
+
+    border-radius: 50px;
+
+    background: var(--primary-light);
+
+    color: var(--primary);
+
+    font-size: 14px;
+
+    font-weight: bold;
+}
+
+.guest-role-badge:empty {
+
+    display: none;
+}
+
+.guest-thanks .guest-role-badge {
+
+    margin-top: 6px;
+}
+
+.guest-question .back-home {
+
+    display: inline-block;
+
+    margin: 0 0 0 10px;
+
+    color: var(--primary);
+
+    text-decoration: underline;
+
+    font-size: 13px;
+}
+
+
 /* Confirmation */
 
 .guest-thanks {
